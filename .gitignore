@@ -1,32 +1,5 @@
-# Prerequisites
-*.d
+#Folders to be excluded
 
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
-
-# Executables
-*.exe
-*.out
-*.app
+CSE523_Project1/data/**
+CSE523_Project1/bin/**
+CSE523_Project1/output/**
