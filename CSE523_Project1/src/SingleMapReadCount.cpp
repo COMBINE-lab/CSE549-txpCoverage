@@ -3,67 +3,117 @@
 #include <string>
 #include <sstream>
 #include <unordered_map>
-#include <map>
+#include <ctime>
 
 using namespace std;
 
-void add(unordered_map<int, int> *read_map, int index) {
-	
-	if((*read_map).find(index) == (*read_map).end()) {
-		(*read_map)[index] = 1;
-	} else {
-		(*read_map).at(index) += 1;
-	}
+void createTxpMap(ifstream *inputFile, unordered_map<string, int> *txp_name_map, unordered_map<int, int> *txp_len_map) {
+
+        int index = -1, txp_len;
+        string line, txp_name;
+
+        while(getline(*inputFile, line)) {
+                if(index++ == -1)
+                        continue;
+
+                istringstream iss(line);
+                iss >> txp_name >> txp_len;
+                (*txp_name_map)[txp_name] = index;
+                (*txp_len_map)[index] = txp_len;
+        }
 }
 
 int main() {
 
-	ifstream  infile;	
-	infile.open("data/input.txt");
+	ifstream  infile;
+	
+	// Creating maps for transcripts name and length
+	infile.open("data/txp_lens.tsv");
 	if(!infile.is_open()) {
 		cout << "Could not open input file" << endl;
 		return -1;
 	}
-	string line;
+	unordered_map<string, int> txp_name_map;
+        unordered_map<int, int> txp_len_map;
+	createTxpMap(&infile, &txp_name_map, &txp_len_map);
+	infile.close();
+
+	//Open pos.csv file for read
+	infile.open("data/pos.csv");
+	if(!infile.is_open()) {
+                cout << "Could not open input file" << endl;
+                return -1;
+        }
 	
+	// create arrays for keeping count
+	int **txp_count_arr = new int*[txp_len_map.size()]();
+	for(auto it = txp_len_map.begin(); it != txp_len_map.end(); it++) {
+		txp_count_arr[it->first] = new int[it->second]();
+	}
+
+	cout << "Starting timer" << endl;
+	clock_t start_time = clock();
+
+	// Read each alternate line of pos.csv
+	int  line_count = -1;
+	string line;
+	while(getline(infile, line)) {
+		line_count++;
+		if(!(line_count % 2)) {
+			continue;
+		}
+
+		istringstream iss(line);
+		int comma_pos;
+		char *name = &line[0];
+		for(comma_pos = 0; line[comma_pos] != ',' && line[comma_pos] != '\0'; comma_pos++) {
+			;
+		}
+		// If wrong line return immediately
+		if(comma_pos == line.size() - 1) {
+			cout << "Comma not found; wrong line parsed!" << endl;
+			return -1;
+		}
+		line[comma_pos] = '\0';
+		char *temp = &line[comma_pos + 1];
+		int pos = stoi(temp, nullptr, 10);
+		txp_count_arr[txp_name_map[name]][pos] += 1;
+	}
+	infile.close();
+	
+	cout << "Total read time :" << float(clock()-start_time)/CLOCKS_PER_SEC << endl;
+	start_time = clock();
+
+	//write result to file	
 	ofstream outfile;
 	outfile.open("output/output.txt", fstream::trunc);
 	if(!outfile.is_open()) {
-		cout << "Could not open output file" << endl;
+		cout << "Could not open/create output file" << endl;
 		return -1;
 	}
 	
-	unordered_map<int, int> *tr_map = new unordered_map<int, int>[6];
-	int *tr_len = new int[6];
-	
-	while(getline(infile, line)) {
-		istringstream iss(line);
-		int index, length, tnum;
-		iss >> index >> length >> tnum;
-
-		tr_len[tnum] = length;
-
-		add(&tr_map[tnum], index);
-	}
-	int i = 0;
-	int count = 0;
-	while(tr_len[i] > 0) {
-		unordered_map<int, int> read_map = tr_map[i];
-		for(int j = 0; j < tr_len[i]; j++) {
-			int output = 0;
-			if(read_map.find(j) == read_map.end()) {
-				//do nothing
-			} else {
-				count++;
-				output = read_map.at(j);
-			}
-			outfile << output << " ";
+	// Since the output is too big, here we are checking for only 1 trasncript
+	// For the complete data set, writing to the file takes about 25 seconds and a file of ~500 MB gets created
+	int read_count = 0;
+	for(auto it = txp_len_map.begin(); it != txp_len_map.end(); it++) {
+		if(txp_name_map["ENST00000272317.10"] != it->first)
+			continue;
+		for(int i = 0; i < it->second; i++) {
+			read_count += txp_count_arr[it->first][i];
+                	outfile << txp_count_arr[it->first][i] << ' ';
 		}
 		outfile << endl;
-		i++;
 	}
-	outfile << "count = " << count << endl;
+	cout << "Read count for ENST00000272317.10 = " << read_count << endl;
 	outfile.close();
-	infile.close();
+	
+	// delete arrays
+        for(auto it = txp_len_map.begin(); it != txp_len_map.end(); it++) {
+                delete [] txp_count_arr[it->first];
+        }
+	delete [] txp_count_arr;
+
+	cout << "Total write time :" << float(clock()-start_time)/CLOCKS_PER_SEC << endl;
+
     return 0;
 }

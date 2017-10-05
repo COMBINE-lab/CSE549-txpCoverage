@@ -12,16 +12,16 @@ using namespace std;
 int main() {
     
     ofstream outFile;
-    outFile.open("input.txt");
+    outFile.open("data/input.txt", fstream::trunc);
 
     int t[5];
-    t[0] = rand() % MAX + MAX;
-    t[1] = rand() % MAX + MAX;
-    t[2] = rand() % MAX + MAX;
-    t[3] = rand() % MAX + MAX;
-    t[4] = rand() % MAX + MAX;
+    t[0] = rand() % MAX;
+    t[1] = rand() % MAX + MAX/2;
+    t[2] = rand() % MAX;
+    t[3] = rand() % MAX;
+    t[4] = rand() % MAX + MAX/2;
 
-    int linesCount = rand() % MAX;
+    int linesCount = 10000000;
 
     for(int i = 0; i < linesCount; i++) {
 	int tIndex = rand() % 5;
