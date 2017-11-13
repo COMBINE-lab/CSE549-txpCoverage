@@ -21,7 +21,8 @@ wget ftp://ftp.sanger.ac.uk/pub/gencode/Gencode_human/release_27/gencode.v27.tra
 
 Download paired end reads
 ```
-
+wget ftp://ftp.sra.ebi.ac.uk/vol1/fastq/ERR188/ERR188023/ERR188023_1.fastq.gz
+wget ftp://ftp.sra.ebi.ac.uk/vol1/fastq/ERR188/ERR188023/ERR188023_2.fastq.gz
 ```
 
 ## 2. Index the reference
