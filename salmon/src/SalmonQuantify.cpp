@@ -37,6 +37,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+#include <iostream>
 
 // C++ string formatting library
 #include "spdlog/fmt/fmt.h"
@@ -292,6 +293,7 @@ void processMiniBatch(ReadExperiment& readExp, ForgettingMassCalculator& fmCalc,
 
       hasCompatibleMapping = false;
       // For each alignment of this read
+      std::cout << alnGroup.read() << "\n";
       for (auto& aln : alnGroup.alignments()) {
 
         useAuxParams = ((localNumAssignedFragments + numAssignedFragments) >= salmonOpts.numPreBurninFrags);
@@ -301,6 +303,8 @@ void processMiniBatch(ReadExperiment& readExp, ForgettingMassCalculator& fmCalc,
         auto& transcript = transcripts[transcriptID];
         transcriptUnique =
             transcriptUnique and (transcriptID == firstTranscriptID);
+
+        std::cout << transcript.RefName << "," << transcript.RefLength << "\n";
 
         double refLength =
             transcript.RefLength > 0 ? transcript.RefLength : 1.0;
@@ -1083,8 +1087,9 @@ void processReadsQuasi(
         }
 
         if (writeQuasimappings) {
-            rapmap::utils::writeAlignmentsToStream(rp, formatter,
-                                                   hctr, jointHits, sstream);
+           // rapmap::utils::writeAlignmentsToStream(rp, formatter,
+           //                                        hctr, jointHits, sstream);
+		rapmap::utils::writeAlignmentsToFile(rp, formatter, jointHits, sstream);
         }
        
       } else {
