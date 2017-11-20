@@ -131,6 +131,38 @@ namespace rapmap {
             reverseRead(seq, work);
             return work;
         }
+        template <typename ReadPairT, typename IndexT>
+        uint32_t writeAlignmentsToFile(
+                ReadPairT& r,
+                PairAlignmentFormatter<IndexT>& formatter,
+                std::vector<rapmap::utils::QuasiAlignment>& jointHits,
+                fmt::MemoryWriter& sstream
+                ) {
+		// Convenient variable name bindings
+                auto& txpNames = formatter.index->txpNames;
+		auto& txpLens = formatter.index->txpLens;
+		auto& readName = r.first.name;
+                // If the read name contains multiple space-separated parts,
+                // print only the first
+                size_t splitPos = readName.find(' ');
+                if (splitPos < readName.length()) {
+                    readName[splitPos] = '\0';
+                } else {
+                    splitPos = readName.length();
+                }
+
+                // trim /1 from the pe read
+                if (splitPos > 2 and readName[splitPos - 2] == '/') {
+                    readName[splitPos - 2] = '\0';
+		}
+		for (auto& qa : jointHits) {
+                	auto& transcriptName = txpNames[qa.tid];
+			
+			sstream << readName.c_str() << '\n' 	// QNAME
+				<< transcriptName << ',' 	// RNAME
+				<< qa.pos + 1 << '\n';	 	// POS (1-based)
+		}
+	}
 
         template <typename ReadT, typename IndexT>
         uint32_t writeAlignmentsToStream(

@@ -714,6 +714,13 @@ namespace rapmap {
                 std::vector<QuasiAlignment>& jointHits,
                 fmt::MemoryWriter& sstream);
 
+	template <typename ReadPairT, typename IndexT>
+        uint32_t writeAlignmentsToFile(
+                ReadPairT& r,
+                PairAlignmentFormatter<IndexT>& formatter,
+                std::vector<QuasiAlignment>& jointHits,
+                fmt::MemoryWriter& sstream);
+
         template <typename ReadT, typename IndexT>
         uint32_t writeAlignmentsToStream(
                 ReadT& r,
