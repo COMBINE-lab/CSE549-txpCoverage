@@ -1394,6 +1394,50 @@ bool createAuxMapLoggers_(SalmonOpts& sopt, boost::program_options::variables_ma
     sopt.qmLog = std::make_shared<spdlog::logger>("qmStream", outputSink);
     sopt.qmLog->set_pattern("%v");
   }
+
+  bool dumpAlignments = (sopt.daFileName != "");
+
+  if (dumpAlignments) {
+    std::streambuf* daBuf{nullptr};
+    // output to stdout
+    if (sopt.daFileName == "-") {
+      daBuf = std::cout.rdbuf();
+    } else { // output to the requested path, making the directory if it doesn't exist
+      // get the absolute file path
+      sopt.daFileName = boost::filesystem::absolute(sopt.daFileName).string();
+      // get the parent directory
+      bfs::path daDir = boost::filesystem::path(sopt.daFileName).parent_path();
+      // if it's not already a directory that exists
+      bool daDirSuccess = boost::filesystem::is_directory(daDir);
+      // try to create it
+      if (!daDirSuccess) {
+        daDirSuccess = boost::filesystem::create_directories(daDir);
+      }
+      // if the directory already existed, or we created it successfully, open the file
+      if (daDirSuccess) {
+        sopt.daFile.open(sopt.daFileName);
+        // Make sure file opened successfully.
+        if (!sopt.daFile.is_open()) {
+          jointLog->error("Could not create file for writing quasi-mappings [{}]", sopt.daFileName);
+          return false;
+        }
+        daBuf = sopt.daFile.rdbuf();
+      } else {
+        bfs::path daFileName = boost::filesystem::path(sopt.daFileName).filename();
+        jointLog->error("Couldn't create requested directory {} in which "
+                        "to place the mapping output {}", daDir.string(), daFileName.string());
+        return false;
+      }
+    }
+    // Now set the output stream to the buffer, which is
+    // either std::cout, or a file.
+    sopt.daStream.reset(new std::ostream(daBuf));
+
+    auto outputSink = std::make_shared<spdlog::sinks::ostream_sink_mt>(*(sopt.daStream.get()));
+    sopt.daLog = std::make_shared<spdlog::logger>("daStream", outputSink);
+    sopt.daLog->set_pattern("%v");
+  }
+
   return true;
 }
 

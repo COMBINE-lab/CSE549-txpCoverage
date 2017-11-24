@@ -34,7 +34,7 @@ struct SalmonOpts {
                    allowOrphans(false), splitSpanningSeeds(false),
                    noFragLengthDist(false), noEffectiveLengthCorrection(false),
                    useReadCompat(false), maxReadOccs(200), extraSeedPass(false),
-                   mappingCacheMemoryLimit(5000000), useQuasi(false) {}
+                   mappingCacheMemoryLimit(5000000), useQuasi(false), dumpAlignments(false) {}
 
   SalmonQuantMode quantMode; // How quantification is done
 
@@ -158,6 +158,14 @@ struct SalmonOpts {
     std::ofstream qmFile;
     std::unique_ptr<std::ostream> qmStream{nullptr};
     std::shared_ptr<spdlog::logger> qmLog{nullptr};
+
+    bool dumpAlignments; // Dump alignment groups
+
+    // For writing quasi-mapped alignments
+    std::string daFileName;
+    std::ofstream daFile;
+    std::unique_ptr<std::ostream> daStream{nullptr};
+    std::shared_ptr<spdlog::logger> daLog{nullptr};
 
 
   std::unique_ptr<std::ofstream> unmappedFile{nullptr};
