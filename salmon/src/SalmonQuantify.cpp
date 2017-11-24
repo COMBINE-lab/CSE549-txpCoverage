@@ -293,7 +293,6 @@ void processMiniBatch(ReadExperiment& readExp, ForgettingMassCalculator& fmCalc,
 
       hasCompatibleMapping = false;
       // For each alignment of this read
-      std::cout << alnGroup.read() << "\n";
       for (auto& aln : alnGroup.alignments()) {
 
         useAuxParams = ((localNumAssignedFragments + numAssignedFragments) >= salmonOpts.numPreBurninFrags);
@@ -303,8 +302,6 @@ void processMiniBatch(ReadExperiment& readExp, ForgettingMassCalculator& fmCalc,
         auto& transcript = transcripts[transcriptID];
         transcriptUnique =
             transcriptUnique and (transcriptID == firstTranscriptID);
-
-        std::cout << transcript.RefName << "," << transcript.RefLength << "\n";
 
         double refLength =
             transcript.RefLength > 0 ? transcript.RefLength : 1.0;
@@ -838,6 +835,11 @@ void processReadsQuasi(
   auto* qmLog = salmonOpts.qmLog.get();
   bool writeQuasimappings = (qmLog != nullptr);
 
+  PairAlignmentFormatter<RapMapIndexT*> formatter_da(qidx);
+  fmt::MemoryWriter sstream_da;
+  auto* daLog = salmonOpts.daLog.get();
+  bool dumpAlignments = (daLog != nullptr);
+
   auto rg = parser->getReadGroup();
   while (parser->refill(rg)) {
       rangeSize = rg.size();
@@ -1087,9 +1089,11 @@ void processReadsQuasi(
         }
 
         if (writeQuasimappings) {
-           // rapmap::utils::writeAlignmentsToStream(rp, formatter,
-           //                                        hctr, jointHits, sstream);
-		rapmap::utils::writeAlignmentsToFile(rp, formatter, jointHits, sstream);
+            rapmap::utils::writeAlignmentsToStream(rp, formatter,
+                                                   hctr, jointHits, sstream);
+        }
+        if (dumpAlignments) {
+           rapmap::utils::writeAlignmentsToFile(rp, formatter_da, jointHits, sstream_da);
         }
        
       } else {
@@ -1148,6 +1152,15 @@ void processReadsQuasi(
         }
         sstream.clear();
     } 
+    if (dumpAlignments) {
+         std::string outStr(sstream_da.str());
+         // Get rid of last newline
+         if (!outStr.empty()) {
+             outStr.pop_back();
+             daLog->info(std::move(outStr));
+         }
+         sstream_da.clear();
+    }
 
     if (writeOrphanLinks) {
         std::string outStr(orphanLinks.str());
@@ -1253,6 +1266,7 @@ void processReadsQuasi(
   fmt::MemoryWriter sstream;
   auto* qmLog = salmonOpts.qmLog.get();
   bool writeQuasimappings = (qmLog != nullptr);
+  
 
  auto rg = parser->getReadGroup();
   while (parser->refill(rg)) {
@@ -2167,6 +2181,11 @@ int salmonQuantify(int argc, char* argv[]) {
    "format.  By default, output will be directed to stdout, but an alternative file name can be "
    "provided instead.")
   (
+   "dumpAlignments,x", po::value<string>(&sopt.daFileName)->default_value("")->implicit_value("-"),
+   "If this option is provided, then quasi-mapped alignments will be written out in a CSV-compatible "
+   "format. By default, output will be directed to stdout, but an alternative file name can be "
+   "provided instead.")
+  (
    "meta", po::bool_switch(&(sopt.meta))->default_value(false),
    "If you're using Salmon on a metagenomic dataset, consider setting this flag to disable parts of the "
    "abundance estimation model that make less sense for metagenomic data."
@@ -2615,6 +2634,7 @@ transcript abundance from RNA-seq reads
 
         sopt.allowOrphans = true;
         sopt.useQuasi = true;
+	sopt.dumpAlignments = true;
         quantifyLibrary<QuasiAlignment>(experiment, greedyChain, memOptions, sopt,
                                         coverageThresh, sopt.numThreads);
       } break;
@@ -2767,6 +2787,14 @@ transcript abundance from RNA-seq reads
         // the file
         if (sopt.qmFileName != "-") { sopt.qmFile.close(); }
     }
+
+     // if we dumped alignemnt groups, flush that buffer
+     if (sopt.daFileName != "" ){
+         sopt.daLog->flush();
+         // if we wrote to a buffer other than stdout, close
+         // the file
+         if (sopt.daFileName != "-") { sopt.daFile.close(); }
+     }
 
     sopt.runStopTime = salmon::utils::getCurrentTimeAsString();
 

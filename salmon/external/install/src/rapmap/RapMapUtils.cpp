@@ -132,7 +132,7 @@ namespace rapmap {
             return work;
         }
         template <typename ReadPairT, typename IndexT>
-        uint32_t writeAlignmentsToFile(
+        uint32_t writeAlignmentGroupsToStream(
                 ReadPairT& r,
                 PairAlignmentFormatter<IndexT>& formatter,
                 std::vector<rapmap::utils::QuasiAlignment>& jointHits,
@@ -141,20 +141,7 @@ namespace rapmap {
 		// Convenient variable name bindings
                 auto& txpNames = formatter.index->txpNames;
 		auto& txpLens = formatter.index->txpLens;
-		auto& readName = r.first.name;
-                // If the read name contains multiple space-separated parts,
-                // print only the first
-                size_t splitPos = readName.find(' ');
-                if (splitPos < readName.length()) {
-                    readName[splitPos] = '\0';
-                } else {
-                    splitPos = readName.length();
-                }
-
-                // trim /1 from the pe read
-                if (splitPos > 2 and readName[splitPos - 2] == '/') {
-                    readName[splitPos - 2] = '\0';
-		}
+		auto& readName = r.second.name;
 		for (auto& qa : jointHits) {
                 	auto& transcriptName = txpNames[qa.tid];
 
@@ -646,35 +633,35 @@ template uint32_t rapmap::utils::writeAlignmentsToStream<fastx_parser::ReadSeq, 
                 fmt::MemoryWriter& sstream
                 );
 
-template uint32_t rapmap::utils::writeAlignmentsToFile<fastx_parser::ReadPair, SAIndex32BitDense*>(
+template uint32_t rapmap::utils::writeAlignmentGroupsToStream<fastx_parser::ReadPair, SAIndex32BitDense*>(
                 fastx_parser::ReadPair& r,
                 PairAlignmentFormatter<SAIndex32BitDense*>& formatter,
                 std::vector<rapmap::utils::QuasiAlignment>& jointHits,
                 fmt::MemoryWriter& sstream);
 
 // pair parser, 64-bit, dense hash
-template uint32_t rapmap::utils::writeAlignmentsToFile<fastx_parser::ReadPair, SAIndex64BitDense*>(
+template uint32_t rapmap::utils::writeAlignmentGroupsToStream<fastx_parser::ReadPair, SAIndex64BitDense*>(
                 fastx_parser::ReadPair& r,
                 PairAlignmentFormatter<SAIndex64BitDense*>& formatter,
                 std::vector<rapmap::utils::QuasiAlignment>& jointHits,
                 fmt::MemoryWriter& sstream);
 
 // pair parser, 32-bit, perfect hash
-template uint32_t rapmap::utils::writeAlignmentsToFile<fastx_parser::ReadPair, SAIndex32BitPerfect*>(
+template uint32_t rapmap::utils::writeAlignmentGroupsToStream<fastx_parser::ReadPair, SAIndex32BitPerfect*>(
                 fastx_parser::ReadPair& r,
                 PairAlignmentFormatter<SAIndex32BitPerfect*>& formatter,
                 std::vector<rapmap::utils::QuasiAlignment>& jointHits,
                 fmt::MemoryWriter& sstream);
 
 // pair parser, 64-bit, perfect hash
-template uint32_t rapmap::utils::writeAlignmentsToFile<fastx_parser::ReadPair, SAIndex64BitPerfect*>(
+template uint32_t rapmap::utils::writeAlignmentGroupsToStream<fastx_parser::ReadPair, SAIndex64BitPerfect*>(
                 fastx_parser::ReadPair& r,
                 PairAlignmentFormatter<SAIndex64BitPerfect*>& formatter,
                 std::vector<rapmap::utils::QuasiAlignment>& jointHits,
                 fmt::MemoryWriter& sstream);
 
 
-template uint32_t rapmap::utils::writeAlignmentsToFile<fastx_parser::ReadPair, RapMapIndex*>(
+template uint32_t rapmap::utils::writeAlignmentGroupsToStream<fastx_parser::ReadPair, RapMapIndex*>(
                 fastx_parser::ReadPair& r,
                 PairAlignmentFormatter<RapMapIndex*>& formatter,
                 std::vector<rapmap::utils::QuasiAlignment>& jointHits,
