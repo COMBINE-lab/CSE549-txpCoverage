@@ -141,15 +141,15 @@ namespace rapmap {
 		// Convenient variable name bindings
                 auto& txpNames = formatter.index->txpNames;
 		auto& txpLens = formatter.index->txpLens;
-		auto& readName = r.second.name;
+		auto& readName = r.first.name;
 		for (auto& qa : jointHits) {
                 	auto& transcriptName = txpNames[qa.tid];
 
-			sstream << readName.c_str() << '\n' 	// QNAME
+			sstream	<< readName.c_str() << '\n' 	// QNAME
 				<< transcriptName << ',' 	// RNAME
 				<< qa.pos + 1 << '\n';	 	// POS (1-based)
 		}
-        return 1;
+        return 0;
 	}
 
         template <typename ReadT, typename IndexT>
