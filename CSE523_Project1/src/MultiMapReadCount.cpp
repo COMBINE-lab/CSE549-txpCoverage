@@ -7,22 +7,25 @@
 
 using namespace std;
 
-void createTxpMap(ifstream *inputFile, unordered_map<string, int> *txp_name_map, unordered_map<int, int> *txp_len_map) {
+void createTxpMaps(ifstream *inputFile, unordered_map<string, int> *txp_name_map, unordered_map<int, int> *txp_len_map, unordered_map<int, float> *txp_abun_map) {
 
         int index = -1, txp_len;
         string line, txp_name;
+	float txp_abun, txp_eff_len, txp_num_reads;
 
         while(getline(*inputFile, line)) {
                 if(index++ == -1)
                         continue;
 
                 istringstream iss(line);
-                iss >> txp_name >> txp_len;
+                iss >> txp_name >> txp_len >> txp_eff_len >> txp_abun >> txp_num_reads;
                 (*txp_name_map)[txp_name] = index;
                 (*txp_len_map)[index] = txp_len;
+		(*txp_abun_map)[index] = txp_abun;
         }
 }
 
+/*
 void createTxpAbunMap(ifstream *inputFile, unordered_map<string, int> *txp_name_map, unordered_map<int, float> *txp_abun_map) {
 
         int index = -1;
@@ -38,6 +41,7 @@ void createTxpAbunMap(ifstream *inputFile, unordered_map<string, int> *txp_name_
                 (*txp_abun_map)[(*txp_name_map)[txp_name]] = txp_abun;
         }
 }
+*/
 
 void add_positions(string line, unordered_map<int, int> *read_pos_map, unordered_map<string, int> *txp_name_map) {
 	istringstream iss(line);
@@ -70,35 +74,33 @@ void setReadCount(unordered_map<int, int> *read_pos_map, unordered_map<int, floa
         }
 }
 
-int main() {
+int main(int argc, char* argv[]) {
 
-	ifstream  infile;
-	
 	// Creating maps for transcripts name and length
-	infile.open("data/txp_lens.tsv");
+	string quantFile = "input/quant.sf";
+	if(argc > 1) {
+		quantFile = argv[1];
+	}
+	ifstream  infile;
+	infile.open(quantFile);
 	if(!infile.is_open()) {
-		cout << "Could not open input file" << endl;
+		cout << "Could not open input file: " << quantFile << endl;
 		return -1;
 	}
 	unordered_map<string, int> txp_name_map;
         unordered_map<int, int> txp_len_map;
-	createTxpMap(&infile, &txp_name_map, &txp_len_map);
-	infile.close();
-
-	// Creating maps for transcripts name and length
-        infile.open("data/abundance.tsv");
-        if(!infile.is_open()) {
-                cout << "Could not open input file" << endl;
-                return -1;
-        }
 	unordered_map<int, float> txp_abun_map;
-	createTxpAbunMap(&infile, &txp_name_map, &txp_abun_map);
-        infile.close();
+	createTxpMaps(&infile, &txp_name_map, &txp_len_map, &txp_abun_map);
+//        infile.close();
 
 	//Open pos.csv file for read
-	infile.open("data/pos.csv");
+	string posFile = "input/pos.csv";
+	if(argc > 2) {
+                posFile = argv[2];
+        }
+	infile.open(posFile);
 	if(!infile.is_open()) {
-                cout << "Could not open input file" << endl;
+                cout << "Could not open input file: " << posFile << endl;
                 return -1;
         }
 	
@@ -128,14 +130,14 @@ int main() {
 		read_count++;
 		read_prev = read;
 	}
-	infile.close();
+//	infile.close();
 	
-	cout << "Total read time :" << float(clock()-start_time)/CLOCKS_PER_SEC << endl;
+	cout << "Total read time :" << float(clock()-start_time)/CLOCKS_PER_SEC << " sec"<< endl;
 	start_time = clock();
 
 	//write result to file	
 	ofstream outfile;
-	outfile.open("output/MultiMapReadCount.txt", fstream::trunc);
+	outfile.open("output/MultiMapReadCount.tsv", fstream::trunc);
 	if(!outfile.is_open()) {
 		cout << "Could not open/create output file" << endl;
 		return -1;
@@ -143,25 +145,34 @@ int main() {
 	
 	// Since the output is too big, here we are checking for only 1 trasncript
 	// For the complete data set, writing to the file takes about 25 seconds and a file of ~500 MB gets created
-	for(auto it = txp_len_map.begin(); it != txp_len_map.end(); it++) {
-		for(int i = 0; i < it->second; i++) {
-                	outfile << txp_count_arr[it->first][i] << ' ';
+	int count = 0;
+	for(auto it = txp_name_map.begin(); it != txp_name_map.end(); it++) {
+		count++;
+		outfile << it->first <<'\t';
+		for(int i = 0; i < txp_len_map[it->second]; i++) {
+                	outfile << txp_count_arr[it->second][i] << '\t';
 		}
+		if(count % 10000 == 0)
+			cout << count << " transcripts written" << endl;
 		outfile << endl;
 	}
-	outfile.close();
+	cout << "Total transcript count: " << count << endl;
+//	outfile.close();
 
 //	cout << "Abundance for ENST00000272317.10 : " << txp_abun_map[txp_name_map["ENST00000272317.10"]] << "\nvalue at 743 : " << txp_count_arr[txp_name_map["ENST00000272317.10"]][743] << endl;
 //	cout << "Abundance for ENST00000495843.1 : " << txp_abun_map[txp_name_map["ENST00000495843.1"]] << "\nvalue at 1075 : " << txp_count_arr[txp_name_map["ENST00000495843.1"]][1075] << endl;
 //	cout << "Abundance for ENST00000404735.1 : " << txp_abun_map[txp_name_map["ENST00000404735.1"]] << "\nvalue at 566 : " << txp_count_arr[txp_name_map["ENST00000404735.1"]][566] << endl;
 	
+
 	// delete arrays
+	cout << "Deleting 'new'ly created arrays" << endl;
         for(auto it = txp_len_map.begin(); it != txp_len_map.end(); it++) {
                 delete [] txp_count_arr[it->first];
         }
 	delete [] txp_count_arr;
 
-	cout << "Total write time :" << float(clock()-start_time)/CLOCKS_PER_SEC << endl;
+
+	cout << "Total write time :" << float(clock()-start_time)/CLOCKS_PER_SEC << " sec" << endl;
 
     return 0;
 }

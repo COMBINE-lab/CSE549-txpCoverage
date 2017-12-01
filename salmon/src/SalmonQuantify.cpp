@@ -1093,7 +1093,7 @@ void processReadsQuasi(
                                                    hctr, jointHits, sstream);
         }
         if (dumpAlignments) {
-           rapmap::utils::writeAlignmentsToFile(rp, formatter_da, jointHits, sstream_da);
+           rapmap::utils::writeAlignmentGroupsToStream(rp, formatter_da, jointHits, sstream_da);
         }
        
       } else {
@@ -2181,7 +2181,7 @@ int salmonQuantify(int argc, char* argv[]) {
    "format.  By default, output will be directed to stdout, but an alternative file name can be "
    "provided instead.")
   (
-   "dumpAlignments,x", po::value<string>(&sopt.daFileName)->default_value("")->implicit_value("-"),
+   "dumpAlignments", po::value<string>(&sopt.daFileName)->default_value("")->implicit_value("-"),
    "If this option is provided, then quasi-mapped alignments will be written out in a CSV-compatible "
    "format. By default, output will be directed to stdout, but an alternative file name can be "
    "provided instead.")
