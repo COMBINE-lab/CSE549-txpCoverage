@@ -1,8 +1,12 @@
-* Compile : run "make" to create executable in "bin" folder
+# Compile
+	run "make" to create executable in "bin" folder
 
-* Input : Copy quant.sf and pos.csv (file created using --dumpAlignments) to "input" folder in project directory.
+# Input
+	Copy quant.sf and pos.csv (file created using --dumpAlignments) to "input" folder in project directory.
 
-* Execute : run following command - 
+# Execute
+	Execute following command - 
 			./bin/MultiMapReadCount input/quant.sf input/pos.csv
 
-* Output : MultiMapReadCount.tsv file will get created in "output" folder.
+# Output
+	MultiMapReadCount.tsv file will get created in "output" folder.

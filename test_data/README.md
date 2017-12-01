@@ -40,3 +40,11 @@ the last step is to run salmon quantification
 ```
 <salmon_bin_path> quant -i <input_index_path> -1 <first_read_file> -2 <second_read_file> -o <salmon_output_folder> -p <num_threads> -la
 ```
+
+# New Flag for dumping alignment groups
+
+"--dumpAlignments" writes alignment group data to stdout which can be redirected in any csv file. For eg:
+
+```
+<salmon_bin_path> quant -i <input_index_path> -1 <first_read_file> -2 <second_read_file> -o <salmon_output_folder> -p <num_threads> -la --dumpAlignments > output/pos.csv
+```
