@@ -144,10 +144,11 @@ namespace rapmap {
 		auto& readName = r.first.name;
 		for (auto& qa : jointHits) {
                 	auto& transcriptName = txpNames[qa.tid];
-
-			sstream	<< readName.c_str() << '\n' 	// QNAME
-				<< transcriptName << ',' 	// RNAME
-				<< qa.pos + 1 << '\n';	 	// POS (1-based)
+			auto minPos = (((qa.matePos + 1) < (qa.pos + 1)) && (qa.matePos >= 0))? (qa.matePos + 1) : (qa.pos + 1);
+			sstream	<< readName.c_str() << '\t' 	// QNAME
+				<< transcriptName << '\t' 	// RNAME
+				<< qa.pos + 1 << '\t'		// POS (1-based)
+				<< qa.matePos + 1 << '\n';	// Mate POS (1=based)
 		}
         return 0;
 	}

@@ -23,7 +23,7 @@ void createTxpMaps(ifstream *inputFile, unordered_map<string, int> *txp_index_ma
         }
 }
 
-int add_positions(string line, unordered_map<string, int> *read_pos_map) {
+/*int add_positions(string line, unordered_map<string, int> *read_pos_map) {
 	istringstream iss(line);
 	string name = "";
 	string t_pos = "";
@@ -36,7 +36,7 @@ int add_positions(string line, unordered_map<string, int> *read_pos_map) {
 	ss >> pos;
 	(*read_pos_map)[name] = pos;
 	return 0;
-}
+}*/
 
 void setReadCount(unordered_map<string, int> *read_pos_map, unordered_map<string, float> *txp_abun_map, unordered_map<string, int> *txp_index_map, float ***txp_count_arr) {
 
@@ -60,7 +60,7 @@ int main(int argc, char* argv[]) {
 	ifstream  infile;
 	infile.open(quantFile);
 	if(!infile.is_open()) {
-		cout << "Could not open input file: " << quantFile << endl;
+		cerr << "Could not open input file: " << quantFile << endl;
 		return -1;
 	}
 	unordered_map<string, int> txp_index_map;
@@ -77,7 +77,7 @@ int main(int argc, char* argv[]) {
         }
 	infile.open(posFile);
 	if(!infile.is_open()) {
-                cout << "Could not open input file: " << posFile << endl;
+                cerr << "Could not open input file: " << posFile << endl;
                 return -1;
         }
 	
@@ -87,15 +87,32 @@ int main(int argc, char* argv[]) {
 		txp_count_arr[txp_index_map[it->first]] = new float[it->second]();
 	}
 
-	cout << "Starting timer" << endl;
+	cerr << "Starting timer" << endl;
 	clock_t start_time = clock();
 
 	// Read pos.csv
-	string read, read_prev, pos_line;
+	string read, read_prev, txp_id, line;
+	uint64_t pos, matePos;
 	unordered_map<string, int> read_pos_map;
 	int read_count = 0;
 	int line_count = 0;
-	while(getline(infile, read) && getline(infile, pos_line)) {
+	while(getline(infile, line) && !line.empty()) {
+		istringstream iss(line);
+		iss >> read >> txp_id >> pos >> matePos;
+		if(read.empty()) {
+			cerr << "Read is empty. Line: " << line << endl;
+			continue;
+		}
+		if(txp_id.empty()) {
+			cerr << "Txp_id is empty. Line: " << line << endl;
+			continue;
+		}
+		if(pos > txp_len_map[txp_id]) {
+			cerr << "wrong pos value. Line: " << line << endl;
+		}
+		if(matePos > 0 && matePos < pos) {
+			pos = matePos;
+		}
 		if(!read_count) {
 			read_prev = read;
 		}
@@ -104,23 +121,18 @@ int main(int argc, char* argv[]) {
                         read_count = 0;
                         read_pos_map.clear();
 		}
-		int ret  = add_positions(pos_line, &read_pos_map);
-		if(ret == -1) {
-			cout << "error in parsing ";
-			cout << "Read: " << read << " skipping it.\n";
-			string temp;
-			getline(infile, temp);
-			read = read_prev;
-			continue;
-		}
+		read_pos_map[txp_id] = pos;
 		read_count++;
 		read_prev = read;
 		line_count++;
+		if(line_count % 100000 == 0) {
+			cerr << line_count << " reads processed" << endl;
+		}
 	}
-	cout << "Total reads processed: " << line_count << endl;
+	cerr << "Total reads processed: " << line_count << endl;
 	infile.close();
 	
-	cout << "Total read time :" << float(clock()-start_time)/CLOCKS_PER_SEC << " sec"<< endl;
+	cerr << "Total read time :" << float(clock()-start_time)/CLOCKS_PER_SEC << " sec"<< endl;
 	start_time = clock();
 
 	// write result to file	
@@ -132,7 +144,7 @@ int main(int argc, char* argv[]) {
 	}
 	outfile.open(outputFile, fstream::trunc);
 	if(!outfile.is_open()) {
-		cout << "Could not open/create output file" << endl;
+		cerr << "Could not open/create output file" << endl;
 		return -1;
 	}
 	
@@ -165,10 +177,10 @@ int main(int argc, char* argv[]) {
 			outfile << endl;
 		}
 	}
-	cout << "Total transcript count: " << count << endl;
+	cerr << "Total transcript count: " << count << endl;
 	outfile.close();
 
-	cout << "Total write time :" << float(clock()-start_time)/CLOCKS_PER_SEC << " sec" << endl;
+	cerr << "Total write time :" << float(clock()-start_time)/CLOCKS_PER_SEC << " sec" << endl;
 
     return 0;
 }
