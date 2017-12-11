@@ -55,18 +55,13 @@ def main(sam, sf, out, tid):
 
                 # add new elements
                 read = qname
-                alns = [rname]
+                alns = []
                 pos = -1
-
-                if rname == tid:
-                    pos = rstart
-                    found = True
-            else:
-                #if many alignments for a read
-                if rname == tid:
-                    pos = rstart
-                    found = True
-                alns.append(rname)
+                
+            if rname == tid:
+                pos = rstart
+                found = True
+            alns.append(rname)
 
     if -1 in coverage:
             print "error"
