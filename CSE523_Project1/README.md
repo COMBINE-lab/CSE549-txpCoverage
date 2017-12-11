@@ -6,7 +6,7 @@
 
 # Execute
 	Execute following command - 
-			./bin/MultiMapReadCount input/quant.sf input/pos.csv
+			./bin/txp_rc input/quant.sf input/pos.csv
 
 # Output
-	MultiMapReadCount.tsv file will get created in "output" folder.
+	txpReadCount.tsv file will get created in "output" folder.
