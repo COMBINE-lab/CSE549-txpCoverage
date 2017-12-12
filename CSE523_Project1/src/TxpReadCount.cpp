@@ -92,10 +92,10 @@ int main(int argc, char* argv[]) {
 
 	// Read pos.csv
 	string read, read_prev, txp_id, line;
-	uint64_t pos, matePos;
+	int pos, matePos;
 	unordered_map<string, int> read_pos_map;
 	int read_count = 0;
-	int line_count = 0;
+	int line_count = 1;
 	while(getline(infile, line) && !line.empty()) {
 		istringstream iss(line);
 		iss >> read >> txp_id >> pos >> matePos;
@@ -109,8 +109,9 @@ int main(int argc, char* argv[]) {
 		}
 		if(pos > txp_len_map[txp_id]) {
 			cerr << "wrong pos value. Line: " << line << endl;
+			continue;
 		}
-		if(matePos > 0 && matePos < pos) {
+		if(matePos < pos) {
 			pos = matePos;
 		}
 		if(!read_count) {
@@ -120,14 +121,14 @@ int main(int argc, char* argv[]) {
                         setReadCount(&read_pos_map, &txp_abun_map, &txp_index_map, &txp_count_arr);
                         read_count = 0;
                         read_pos_map.clear();
+			line_count++;
+			if(line_count % 100000 == 0) {
+				cerr << "Reads processed: " << line_count << endl;
+			}
 		}
 		read_pos_map[txp_id] = pos;
 		read_count++;
 		read_prev = read;
-		line_count++;
-		if(line_count % 100000 == 0) {
-			cerr << line_count << " reads processed" << endl;
-		}
 	}
 	cerr << "Total reads processed: " << line_count << endl;
 	infile.close();
@@ -160,7 +161,7 @@ int main(int argc, char* argv[]) {
 		if(!txpId.empty()) {
 			if(txpId.compare(it->first) == 0) {
 				outfile << it->first <<'\t';
-				for(int i = 0; i < txp_len_map[it->first]; i++) {
+				for(int i = 1; i < txp_len_map[it->first]; i++) {
 					outfile << txp_count_arr[it->second][i] << '\t';
                 		}
 				count++;
@@ -170,15 +171,26 @@ int main(int argc, char* argv[]) {
 			count++;
 			outfile << it->first <<'\t';
 			for(int i = 0; i < txp_len_map[it->first]; i++) {
-                		outfile << txp_count_arr[it->second][i] << '\t';
+                		outfile << txp_count_arr[it->second][i];
+				if(i < txp_len_map[it->first] -1) {
+					outfile << '\t';
+				}
 			}
 			if(count % 10000 == 0)
-				cout << count << " transcripts written" << endl;
+				cerr << count << " transcripts written" << endl;
 			outfile << endl;
 		}
 	}
+	outfile << endl;
 	cerr << "Total transcript count: " << count << endl;
 	outfile.close();
+
+	// delete arrays
+	cerr << "Deleting 'new'ly created arrays" << endl;
+	for(auto it = txp_index_map.begin(); it != txp_index_map.end(); it++) {
+		delete [] txp_count_arr[it->second];
+	}
+	delete [] txp_count_arr;
 
 	cerr << "Total write time :" << float(clock()-start_time)/CLOCKS_PER_SEC << " sec" << endl;
 
