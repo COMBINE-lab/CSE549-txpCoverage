@@ -17,6 +17,6 @@ else
 	echo "Txp ID: " "$1"
 	./bin/txp_rc ../salmon/output/quant.sf ../salmon/output/pos3.csv output/txpReadCount.tsv "$1"
 	cd ..
-	imgName="txp_plot/$1.jpg"
+	imgName="txp_plot/$1.png"
 	Rscript txp_plot/plot.R CSE523_Project1/output/txpReadCount.tsv "$imgName"
 fi

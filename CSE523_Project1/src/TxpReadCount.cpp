@@ -123,7 +123,7 @@ int main(int argc, char* argv[]) {
                         read_pos_map.clear();
 			line_count++;
 			if(line_count % 100000 == 0) {
-				cerr << "Reads processed: " << line_count << endl;
+				cerr << "\rReads processed: " << line_count;
 			}
 		}
 		read_pos_map[txp_id] = pos;
@@ -177,7 +177,7 @@ int main(int argc, char* argv[]) {
 				}
 			}
 			if(count % 10000 == 0)
-				cerr << count << " transcripts written" << endl;
+				cerr << count << " transcripts written" << '\r';
 			outfile << endl;
 		}
 	}
