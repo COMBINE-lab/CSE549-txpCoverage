@@ -142,17 +142,25 @@ namespace rapmap {
                 auto& txpNames = formatter.index->txpNames;
 		auto& txpLens = formatter.index->txpLens;
 		auto& readName = r.first.name;
+		auto& cigarStr1 = formatter.cigarStr1;
+		auto& cigarStr2 = formatter.cigarStr2;
 		for (auto& qa : jointHits) {
+			if(qa.isPaired) {
+			rapmap::utils::adjustOverhang(qa, txpLens[qa.tid], cigarStr1, cigarStr2);
                 	auto& transcriptName = txpNames[qa.tid];
 			// auto minPos = (((qa.matePos + 1) < (qa.pos + 1)) && (qa.matePos >= 0))? (qa.matePos + 1) : (qa.pos + 1);
-			if(qa.pos < 0)
-				qa.pos = 0;
-			if(qa.matePos < 0)
-				qa.matePos = 0;
 			sstream	<< readName.c_str() << '\t' 	// QNAME
 				<< transcriptName << '\t' 	// RNAME
 				<< qa.pos + 1 << '\t'		// POS (1-based)
 				<< qa.matePos + 1 << '\n';	// Mate POS (1=based)
+			} else {
+				rapmap::utils::adjustOverhang(qa.pos, qa.readLen, txpLens[qa.tid], cigarStr2);
+				auto& transcriptName = txpNames[qa.tid];
+				sstream << readName.c_str() << '\t'     // QNAME
+                                << transcriptName << '\t'       // RNAME
+                                << qa.pos + 1 << '\t'           // POS (1-based)
+                                << qa.pos + 1 << '\n';      // Mate POS (1=based)
+			}
 		}
         return 0;
 	}
@@ -274,7 +282,7 @@ namespace rapmap {
                 }
 
                 auto& mateName = r.second.name;
-                // If the read name contains multiple space-separated parts,
+		// If the read name contains multiple space-separated parts,
                 // print only the first
                 splitPos = mateName.find(' ');
                 if (splitPos < mateName.length()) {
