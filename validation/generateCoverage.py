@@ -35,9 +35,11 @@ def main(sam, sf, out, tid):
         found = False
         num = 0
         for aln in samFile:
+            if aln.is_read2:
+                continue
             qname = aln.query_name
             rname = aln.reference_name
-            rstart = aln.reference_start
+            rstart = min(aln.reference_start, aln.next_reference_start)
             if read != qname:
                 num += 1
                 if num%100000 == 0:
@@ -57,7 +59,7 @@ def main(sam, sf, out, tid):
                 read = qname
                 alns = []
                 pos = -1
-                
+
             if rname == tid:
                 pos = rstart
                 found = True
