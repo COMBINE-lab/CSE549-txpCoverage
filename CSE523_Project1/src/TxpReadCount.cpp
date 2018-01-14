@@ -28,9 +28,8 @@ void createTxpMaps(ifstream &inputFile, unordered_map<string, uint32_t> &txp_ind
   inputFile.close();
 }
 
-void setReadCount(unordered_map<uint32_t, uint32_t>& read_pos_map,
+void setReadCount(vector<pair<uint32_t, uint32_t>>& read_pos_map,
                   vector<double>& txp_abun_map,
-                  unordered_map<string, uint32_t>& txp_index_map,
                   vector<vector<double>>& txp_count_arr) {
 
 	double norm = 0;
@@ -106,7 +105,7 @@ int main(int argc, char* argv[]) {
 	// Read pos.csv
 	string read, read_prev, txp_id, line;
 	uint32_t pos, matePos, read_count{0}, line_count{0};
-	unordered_map<uint32_t, uint32_t> read_pos_map;
+	vector<pair<uint32_t, uint32_t>> read_pos_map;
 	//int read_count = 0;
 	//int line_count = 1;
 	while(getline(infile, line) && !line.empty()) {
@@ -120,7 +119,9 @@ int main(int argc, char* argv[]) {
 			cerr << "Txp_id is empty. Line: " << line << endl;
 			continue;
 		}
-		if(pos > txp_len_map[txp_index_map[ txp_id ]]) {
+    auto txp_idx = txp_index_map[txp_id];
+    auto txp_len = txp_len_map[txp_idx];
+		if(pos > txp_len) {
 			cerr << "wrong pos value. Line: " << line << endl;
 			continue;
 		}
@@ -131,8 +132,7 @@ int main(int argc, char* argv[]) {
 			read_prev = read;
 		}
 		if(read.compare(read_prev)) {
-      setReadCount(read_pos_map, txp_abun_map,
-                   txp_index_map, txp_count_arr);
+      setReadCount(read_pos_map, txp_abun_map, txp_count_arr);
       read_count = 0;
       read_pos_map.clear();
 			line_count++;
@@ -140,7 +140,7 @@ int main(int argc, char* argv[]) {
 				cerr << "\rReads processed: " << line_count;
 			}
 		}
-		read_pos_map[txp_index_map[txp_id]] = pos;
+		read_pos_map.emplace_back(make_pair(txp_idx, pos));
 		read_count++;
 		read_prev = read;
 	}
