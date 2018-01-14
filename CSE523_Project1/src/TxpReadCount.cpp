@@ -108,9 +108,9 @@ int main(int argc, char* argv[]) {
 	vector<pair<uint32_t, uint32_t>> read_pos_map;
 	//int read_count = 0;
 	//int line_count = 1;
-	while(getline(infile, line) && !line.empty()) {
-		istringstream iss(line);
-		iss >> read >> txp_id >> pos >> matePos;
+	//while(getline(infile, line) && !line.empty()) {
+  while(not infile.eof()) {
+		infile >> read >> txp_id >> pos >> matePos;
 		if(read.empty()) {
 			cerr << "Read is empty. Line: " << line << endl;
 			continue;
