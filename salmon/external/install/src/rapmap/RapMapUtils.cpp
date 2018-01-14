@@ -150,14 +150,14 @@ namespace rapmap {
                 	auto& transcriptName = txpNames[qa.tid];
 			// auto minPos = (((qa.matePos + 1) < (qa.pos + 1)) && (qa.matePos >= 0))? (qa.matePos + 1) : (qa.pos + 1);
 			sstream	<< readName.c_str() << '\t' 	// QNAME
-				<< transcriptName << '\t' 	// RNAME
+				<< qa.tid << '\t' 	// RNAME
 				<< qa.pos + 1 << '\t'		// POS (1-based)
 				<< qa.matePos + 1 << '\n';	// Mate POS (1=based)
 			} else {
 				rapmap::utils::adjustOverhang(qa.pos, qa.readLen, txpLens[qa.tid], cigarStr2);
 				auto& transcriptName = txpNames[qa.tid];
 				sstream << readName.c_str() << '\t'     // QNAME
-                                << transcriptName << '\t'       // RNAME
+                                << qa.tid << '\t'       // RNAME
                                 << qa.pos + 1 << '\t'           // POS (1-based)
                                 << qa.pos + 1 << '\n';      // Mate POS (1=based)
 			}

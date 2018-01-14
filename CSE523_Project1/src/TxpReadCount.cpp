@@ -103,8 +103,8 @@ int main(int argc, char* argv[]) {
 	clock_t start_time = clock();
 
 	// Read pos.csv
-	string read, read_prev, txp_id, line;
-	uint32_t pos, matePos, read_count{0}, line_count{0};
+	string read, read_prev, line;
+	uint32_t pos, matePos, txp_id, read_count{0}, line_count{0};
 	vector<pair<uint32_t, uint32_t>> read_pos_map;
 	//int read_count = 0;
 	//int line_count = 1;
@@ -115,12 +115,11 @@ int main(int argc, char* argv[]) {
 			cerr << "Read is empty. Line: " << line << endl;
 			continue;
 		}
-		if(txp_id.empty()) {
+		if(txp_id < 0) {
 			cerr << "Txp_id is empty. Line: " << line << endl;
 			continue;
 		}
-    auto txp_idx = txp_index_map[txp_id];
-    auto txp_len = txp_len_map[txp_idx];
+    auto txp_len = txp_len_map[txp_id];
 		if(pos > txp_len) {
 			cerr << "wrong pos value. Line: " << line << endl;
 			continue;
@@ -140,7 +139,7 @@ int main(int argc, char* argv[]) {
 				cerr << "\rReads processed: " << line_count;
 			}
 		}
-		read_pos_map.emplace_back(make_pair(txp_idx, pos));
+		read_pos_map.emplace_back(make_pair(txp_id, pos));
 		read_count++;
 		read_prev = read;
 	}
@@ -199,13 +198,6 @@ int main(int argc, char* argv[]) {
 	outfile << endl;
 	cerr << "Total transcript count: " << count << endl;
 	outfile.close();
-
-	// delete arrays
-	//cerr << "Deleting 'new'ly created arrays" << endl;
-	//for(auto it = txp_index_map.begin(); it != txp_index_map.end(); it++) {
-	//	delete [] txp_count_arr[it->second];
-	//}
-	//delete [] txp_count_arr;
 
 	cerr << "Total write time :" << float(clock()-start_time)/CLOCKS_PER_SEC << " sec" << endl;
 
