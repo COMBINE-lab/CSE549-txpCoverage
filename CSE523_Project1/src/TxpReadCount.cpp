@@ -8,19 +8,19 @@
 
 using namespace std;
 
-void createTxpMaps(ifstream &inputFile, unordered_map<string, uint32_t> &txp_index_map,
+void createTxpMaps(ifstream &inputFile, vector<pair<string, uint32_t>> &txp_index_map,
                    vector<uint32_t> &txp_len_map, vector<double> &txp_abun_map) {
 
-  uint32_t txp_len, index {0};
-  string line, txp_name;
+	uint32_t txp_len, index {0};
 	double txp_abun, txp_eff_len, txp_num_reads;
+	string line, txp_id;
+	getline(inputFile, line);
 
-  getline(inputFile, line);
-  while(getline(inputFile, line) && !line.empty()) {
-    istringstream iss(line);
-    iss >> txp_name >> txp_len >> txp_eff_len >> txp_abun >> txp_num_reads;
-		txp_index_map[txp_name] = index++;
-    txp_len_map.emplace_back( txp_len );
+  	while(not inputFile.eof()) {
+    		inputFile >> txp_id >> txp_len >> txp_eff_len >> txp_abun >> txp_num_reads;
+		// txp_index_map[txp_name] = index++;
+		txp_index_map.emplace_back(make_pair(txp_id, index++));
+    		txp_len_map.emplace_back( txp_len );
 		txp_abun_map.emplace_back( txp_num_reads );
   } // end-while
 
@@ -71,8 +71,8 @@ int main(int argc, char* argv[]) {
 		cerr << "Could not open input file: " << quantFile << endl;
 		return -1;
 	}
-	unordered_map<string, uint32_t> txp_index_map;
-  vector<uint32_t> txp_len_map;
+	vector<pair<string, uint32_t>> txp_index_map;
+  	vector<uint32_t> txp_len_map;
 	vector<double> txp_abun_map;
 
 	createTxpMaps(infile, txp_index_map, txp_len_map, txp_abun_map);
@@ -81,7 +81,7 @@ int main(int argc, char* argv[]) {
 	string posFile = "input/pos.csv";
 	if(argc > 2 && argv[2] != NULL) {
 		string temp(argv[2]);
-    posFile = temp;
+    		posFile = temp;
   }
 	infile.open(posFile);
 	if(!infile.is_open()) {
@@ -109,7 +109,7 @@ int main(int argc, char* argv[]) {
 	//int read_count = 0;
 	//int line_count = 1;
 	//while(getline(infile, line) && !line.empty()) {
-  while(not infile.eof()) {
+  	while(not infile.eof()) {
 		infile >> read >> txp_id >> pos >> matePos;
 		if(read.empty()) {
 			cerr << "Read is empty. Line: " << line << endl;
@@ -119,7 +119,7 @@ int main(int argc, char* argv[]) {
 			cerr << "Txp_id is empty. Line: " << line << endl;
 			continue;
 		}
-    auto txp_len = txp_len_map[txp_id];
+		auto txp_len = txp_len_map[txp_id];
 		if(pos > txp_len) {
 			cerr << "wrong pos value. Line: " << line << endl;
 			continue;
@@ -131,9 +131,9 @@ int main(int argc, char* argv[]) {
 			read_prev = read;
 		}
 		if(read.compare(read_prev)) {
-      setReadCount(read_pos_map, txp_abun_map, txp_count_arr);
-      read_count = 0;
-      read_pos_map.clear();
+      			setReadCount(read_pos_map, txp_abun_map, txp_count_arr);
+      			read_count = 0;
+      			read_pos_map.clear();
 			line_count++;
 			if(line_count % 100000 == 0) {
 				cerr << "\rReads processed: " << line_count;
@@ -171,13 +171,13 @@ int main(int argc, char* argv[]) {
 		txpId = temp;
 	}
 	for(auto it: txp_index_map) {
-    auto txp_len = txp_len_map[ txp_index_map[ it.first ] ];
+    		auto txp_len = txp_len_map[it.second];
 		if(!txpId.empty()) {
 			if(txpId.compare(it.first) == 0) {
 				outfile << it.first <<'\t';
 				for(int i = 1; i < txp_len; i++) {
 					outfile << txp_count_arr[it.second][i] << '\t';
-        }
+        			}
 				count++;
 				break;
 			}
@@ -185,7 +185,7 @@ int main(int argc, char* argv[]) {
 			count++;
 			outfile << it.first <<'\t';
 			for(int i = 0; i < txp_len; i++) {
-        outfile << txp_count_arr[it.second][i];
+        			outfile << txp_count_arr[it.second][i];
 				if(i < txp_len -1) {
 					outfile << '\t';
 				}

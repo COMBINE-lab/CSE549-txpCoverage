@@ -1,10 +1,10 @@
-library(ggplot2)
+#library(plotly)
 
 args <- commandArgs(trailingOnly=TRUE)
 inputFile <- c()
 outputFile <- c()
 if(length(args) == 0) {
-	inputFile <- "../CSE523_Project1/output/txpReadCount.tsv"
+	inputFile <- "C:/Workspace/CSE549-txpCoverage/CSE523_Project1/output/txpReadCount.tsv"
 } else {
 	inputFile <- args[1]
 }
@@ -22,9 +22,7 @@ if(length(args) < 2) {
 }
 
 png(file = outputFile, width=1000, height=600, unit="px")
-
 plot(i_vec, type = "l", col = "blue", lty = 1, axes=FALSE, ann=FALSE)
-
 xLabCount = as.integer(length(i_vec)/20)
 yLabCount = as.integer(max(i_vec)/8)
 axis(1, at = xLabCount * 0:length(i_vec))
@@ -35,9 +33,13 @@ title(ylab="Coverage")
 legend("topright", c(c_vec[1]), cex = 1.0, col = c("blue"), lty = 1)
 box(bty="L")
 
-dev.off()
-#df <- data.frame(i_vec)
-#g<-ggplot(df)
-#g
 
+#x <- c(1:length(i_vec))
+#y <- c(0:max(i_vec))
+#p <- plot_ly(x = ~x, y = i_vec, type = "scatter", mode = "lines")
+#print(p)
+#chart_link = plotly_POST(p, filename=outputFile)
+#chart_link
+
+dev.off()
 close(conn)

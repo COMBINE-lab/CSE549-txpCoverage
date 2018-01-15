@@ -1,5 +1,5 @@
 CC=g++
-CFLAGS=-std=c++11 -g
+CFLAGS=-std=c++11 -g -O2
 
 .PHONY: all clean test
 
