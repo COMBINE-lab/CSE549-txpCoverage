@@ -15,7 +15,7 @@ multi_map:
 
 txp_rc:
 	mkdir -p bin output
-	$(CC) $(CFLAGS) src/TxpReadCount.cpp -o bin/txp_rc
+	$(CC) $(CFLAGS) src/GeneTxpReadCount.cpp -o bin/txp_rc
 
 clean:
 	rm -rf bin/ output/

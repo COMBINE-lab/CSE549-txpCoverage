@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<html>
+
+    <head>
+        <link rel='stylesheet' href='../assets/css/main.css'>
+        <title>transcript plots</title>
+    </head>
+    
+    <body>
+        <h1>Transcript Coverage</h1>
+        <div class="SearchBar">
+            <p class="SearchBar">Search:</p>
+            <input class="SearchBar" id="search" type="text" placeholder="Enter Gene Id ...">
+            <button id="search_button" type="button">Go</button>
+        </div>
+        <p id="50_map_msg">Showing first 50 mappings</p>
+        <div id="t_div">
+            <div id="table_div">
+                <table id="gene_table">
+                    <thead>
+                        <tr></tr>
+                    </thead>
+                    <tbody id="tbody"></tbody>
+                </table>
+            </div>
+            <input id="gene_id" type="text" style="display: none">
+            <button id="plot_button" type="button" onclick="plotBtnClick()" disabled="true">Display Plots</button>
+        </div>
+        <div id="plot_div">
+        </div>
+    </body>
+	
+	<script type="text/javascript" src="../assets/js/d3.min.js"></script>
+    <script type='text/javascript' src='../assets/js/table.js'></script>
+    <script type='text/javascript' src='../src/renderer.js'></script>
+</html>
