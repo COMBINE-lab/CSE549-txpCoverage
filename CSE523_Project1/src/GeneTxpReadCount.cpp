@@ -1,0 +1,209 @@
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <vector>
+#include <sstream>
+#include <unordered_map>
+#include <ctime>
+#include <algorithm>
+
+using namespace std;
+
+void createTxpList(ifstream &inputFile, string gene_id, vector<string> &txp_list) {
+	string line, geneId, txpId;
+	getline(inputFile, line);
+	while(not inputFile.eof()) {
+		inputFile >> geneId >> txpId;
+		if(gene_id.compare(geneId) == 0) {
+			txp_list.emplace_back(txpId);
+		}
+	}
+	inputFile.close();
+}
+
+void createTxpMaps(ifstream &inputFile, vector<string> &txp_list, vector<pair<string, uint32_t>> &txp_index_map,
+                   vector<uint32_t> &txp_len_map, vector<double> &txp_abun_map) {
+
+	uint32_t txp_len, index {0};
+	double txp_abun, txp_eff_len, txp_num_reads;
+	string line, txp_id;
+	getline(inputFile, line);
+
+  	while(not inputFile.eof()) {
+    		inputFile >> txp_id >> txp_len >> txp_eff_len >> txp_abun >> txp_num_reads;
+    		txp_len_map.emplace_back(txp_len);
+		txp_abun_map.emplace_back(txp_num_reads);
+		if(find(txp_list.begin(), txp_list.end(), txp_id) != txp_list.end()) {
+			txp_index_map.emplace_back(make_pair(txp_id, index));
+		}
+		index++;
+  	} // end-while
+
+  	// Done reading sf file
+  	inputFile.close();
+}
+
+void setReadCount(vector<pair<uint32_t, uint32_t>>& read_pos_map,
+                  vector<double>& txp_abun_map,
+                  vector<vector<double>>& txp_count_arr) {
+
+	double norm = 0;
+  	for (auto it: read_pos_map) {
+    		uint32_t txp_idx = it.first;
+    		double abundance = txp_abun_map[txp_idx];
+
+    		norm += abundance;
+  	}
+
+  	for (auto it: read_pos_map){
+    		uint32_t txp_idx = it.first;
+    		uint32_t position = it.second;
+
+    		double abundance = txp_abun_map[txp_idx];
+    		double count = abundance / norm;
+
+    		txp_count_arr[txp_idx][position] += count;
+  	}
+}
+
+int main(int argc, char* argv[]) {
+
+	vector<string> txp_list;
+	vector<pair<string, uint32_t>> txp_index_map;
+	vector<uint32_t> txp_len_map;
+	vector<double> txp_abun_map;
+	ifstream infile;
+
+	//TODO: add check to see if args contain geneID, if not return 1
+
+	// Creating list of transcripts for given geneID
+        string geneFile = "input/gene2txp.tsv";
+        if(argc > 1 && argv[1] != NULL) {
+                string temp(argv[1]);
+                geneFile = temp;
+        }
+        infile.open(geneFile);
+        if(!infile.is_open()) {
+                cerr << "Could not open input file: " << geneFile << endl;
+                return -1;
+        }
+	string gene_id = argv[argc-1];
+	createTxpList(infile, gene_id, txp_list);
+
+	// Creating maps for transcripts name and length
+	string quantFile = "input/quant.sf";
+	if(argc > 2 && argv[2] != NULL) {
+		string temp(argv[2]);
+		quantFile = temp;
+	}
+	infile.open(quantFile);
+	if(!infile.is_open()) {
+		cerr << "Could not open input file: " << quantFile << endl;
+		return -1;
+	}
+
+	createTxpMaps(infile, txp_list, txp_index_map, txp_len_map, txp_abun_map);
+
+	// Open pos.csv file for read
+	string posFile = "input/pos.csv";
+	if(argc > 3 && argv[3] != NULL) {
+		string temp(argv[3]);
+    		posFile = temp;
+  	}
+	infile.open(posFile);
+	if(!infile.is_open()) {
+    		cerr << "Could not open input file: " << posFile << endl;
+    		return -1;
+  	}
+
+	// create arrays for keeping count
+	vector<vector<double>> txp_count_arr (txp_len_map.size());
+	for (size_t i=0; i<txp_len_map.size(); i++){
+		txp_count_arr[i] = vector<double> (txp_len_map[i], 0.0);
+	}
+
+	cerr << "Starting timer" << endl;
+	clock_t start_time = clock();
+
+	// Read pos.csv
+	string read, read_prev, line;
+	uint32_t pos, matePos, txp_id, read_count{0}, line_count{0};
+	vector<pair<uint32_t, uint32_t>> read_pos_map;
+  	while(not infile.eof()) {
+		infile >> read >> txp_id >> pos >> matePos;
+		if(read.empty()) {
+			cerr << "Read is empty. Line: " << line << endl;
+			continue;
+		}
+		if(txp_id < 0) {
+			cerr << "Txp_id is empty. Line: " << line << endl;
+			continue;
+		}
+		auto txp_len = txp_len_map[txp_id];
+		if(pos > txp_len) {
+			cerr << "wrong pos value. Line: " << line << endl;
+			continue;
+		}
+		if(matePos < pos) {
+			pos = matePos;
+		}
+		if(!read_count) {
+			read_prev = read;
+		}
+		if(read.compare(read_prev)) {
+      			setReadCount(read_pos_map, txp_abun_map, txp_count_arr);
+      			read_count = 0;
+      			read_pos_map.clear();
+			line_count++;
+			if(line_count % 100000 == 0) {
+				cerr << "\rReads processed: " << line_count;
+			}
+		}
+		read_pos_map.emplace_back(make_pair(txp_id, pos));
+		read_count++;
+		read_prev = read;
+	}
+	cerr << "Total reads processed: " << line_count << endl;
+	infile.close();
+
+	cerr << "Total read time :" << float(clock()-start_time)/CLOCKS_PER_SEC << " sec"<< endl;
+	start_time = clock();
+
+	// write result to file	
+	ofstream outfile;
+	string outputFile = "output/txpReadCount.tsv";
+	if(argc > 4 && argv[4] != NULL) {
+		string temp(argv[4]);
+		outputFile = temp;
+	}
+	outfile.open(outputFile, fstream::trunc);
+	if(!outfile.is_open()) {
+		cerr << "Could not open/create output file" << endl;
+		return -1;
+	}
+
+	int count = 0;
+	for(auto it: txp_index_map) {
+		auto txpIndex = it.second;
+    		auto txp_len = txp_len_map[txpIndex];
+		count++;
+		outfile << it.first <<'\t';
+		for(int i = 0; i < txp_len; i++) {
+        		outfile << txp_count_arr[txpIndex][i];
+			if(i < txp_len -1) {
+				outfile << '\t';
+			}
+		}
+		if(count % 10000 == 0) {
+			cerr << count << " transcripts written" << '\r';
+		}
+		outfile << endl;
+	}
+	outfile << endl;
+	cerr << "\nTotal transcript count: " << count << endl;
+	outfile.close();
+
+	cerr << "Total write time :" << float(clock()-start_time)/CLOCKS_PER_SEC << " sec" << endl;
+
+    return 0;
+}
